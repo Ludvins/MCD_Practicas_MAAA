@@ -6,9 +6,14 @@ from sklearn.metrics.pairwise import rbf_kernel
 
 class MySVC():
     """
-        SVC with a simplified version of SMO.
+    SVC with a simplified version of SMO.
     """
-    def __init__(self, C=1.0, gamma='scale', tol=0.0001, max_iter=100, seed = 1234):
+    def __init__(self,
+                 C=1.0,
+                 gamma='scale',
+                 tol=0.0001,
+                 max_iter=100,
+                 seed=1234):
         # Assignment of the hyper-parameters.
         self.C = C
         self.gamma = gamma
@@ -16,7 +21,6 @@ class MySVC():
         self.max_iter = max_iter
         self.intercept = None
         self.seed = seed
-
 
     def fit(self, X, y):
         # Constants.
@@ -28,11 +32,11 @@ class MySVC():
         if (self.gamma == 'auto'):
             self.gamma = 1.0 / self.n_dim
 
+        # Set numpy seed
+        np.random.seed(self.seed)
+
         # Initialization of the dual coefficients (named "a" instead of "alpha" for simplicity).
         self.a = np.zeros(self.n_pat)
-
-        self.X = X
-        self.y = y
 
         # Pre-calculate all RBG configurations. As rbf(i,j) = rbf(j,i), only the "upper side
         # of the matrix" is computed.
@@ -41,9 +45,10 @@ class MySVC():
             for j in range(i, self.n_pat)
         ] for i in range(self.n_pat)]
 
-        # Create a lambda function to access correct position in the upper side matrix given
+        # Create a local function to access correct position in the upper side matrix given
         # "careless" indexes.
-        RBF = lambda i, j: rbf[min(i, j)][max(i, j) - min(i, j)]
+        def RBF(i, j):
+            return rbf[min(i, j)][max(i, j) - min(i, j)]
 
         # Loop over the iterations.
         for it in range(self.max_iter):
@@ -52,7 +57,6 @@ class MySVC():
 
             # Compute all indexes are are going to be altered
             I = np.arange(self.n_pat)
-            np.random.seed(self.seed)
             J = [np.random.choice(I[I != i]) for i in I]
 
             # As k does only depend on the RBF, it may be computed outside the loop.
@@ -86,11 +90,14 @@ class MySVC():
             if np.linalg.norm(self.a - a_old) < self.tol:
                 break
 
-        # Storage of the obtained parameters and computation of the intercept (complete).
+        # Computation of the intercept.
         self.intercept = np.mean([
             y[k] - sum(self.a * y * [RBF(i, k) for i in range(self.n_pat)])
             for k in range(self.n_pat)
         ])
+
+        # Get vector of weights
+        self.w = sum(self.a[i] * y[i] * X[i] for i in range(self.n_pat))
 
         return self
 
@@ -105,17 +112,19 @@ class MySVC():
 
         return L, H
 
-    def decision_function(self, X_test):
+    def decision_function(self, X):
         # Computation of the decision function over X (complete).
         if self.intercept is None:
             print("[Error]: Model is not trained.")
         else:
-            return [
-                sum(self.a * self.y * [
-                    rbf_kernel(self.X[i].reshape(1, -1), x.reshape(1, -1))[0][0]
-                    for i in range(self.n_pat)
-                ]) + self.intercept for x in X_test
-            ]
+            return X@self.w + self.intercept
+            # return [
+            #     sum(self.a * self.y * [
+            #         rbf_kernel(self.X[i].reshape(1, -1), x.reshape(
+            #             1, -1))[0][0] for i in range(self.n_pat)
+            #     ]) + self.intercept for x in X
+            # ]
+
 
     def predict(self, X_test):
         # Computation of the predicted class over X (complete).
@@ -128,4 +137,4 @@ class MySVC():
         if self.intercept is None:
             print("[Error]: Model is not trained.")
         else:
-            return np.sum(self.predict(X_test) == y_test)/len(y_test)
+            return np.sum(self.predict(X_test) == y_test) / len(y_test)

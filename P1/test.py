@@ -50,3 +50,19 @@ print("Score en Sklearn: ", score_sk)
 
 # Comparative of the predicted classes (complete).
 # ...
+
+decision = model_my.decision_function(x_tr)
+clasification = np.sign(decision)
+a = model_my.a
+
+# Puntos bien clasificados
+x_tr[clasification == y_tr]
+
+# Puntos mal clasificados
+x_tr[clasification != y_tr]
+
+# Puntos de soporte
+x_tr[(y_tr*decision == 1) & (a > 0)]
+
+# Puntos bien clasificados pero al lado erroneo del soporte
+x_tr[(clasification == y_tr) & (decision < 1)]
