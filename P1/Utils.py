@@ -428,7 +428,7 @@ def plot_svc(x, y, model, n_points=151, plot_slack=False):
     xy = np.vstack([xx.ravel(), yy.ravel()]).T
     zz = model.decision_function(xy).reshape(xx.shape)
 
-    plt.pcolormesh(xx, yy, np.sign(zz), shading='flat', cmap=colors.ListedColormap([alpha * col_2 + 1 - alpha, alpha * col_1 + 1 - alpha]))
+    plt.pcolormesh(xx, yy, np.sign(zz), shading='auto', cmap=colors.ListedColormap([alpha * col_2 + 1 - alpha, alpha * col_1 + 1 - alpha]))
     plt.contour(xx, yy, zz, colors=['r', 'k', 'b'], levels=[-1, 0, 1], linestyles=['--', '-', '--'], linewidths=[2, 4, 2])
     plt.legend(handles=[
         lines.Line2D([], [], color='r', linestyle='--', label='Support Hyp. $-1$'),
@@ -452,6 +452,7 @@ def plot_svc(x, y, model, n_points=151, plot_slack=False):
     plt.xlabel('$x_1$')
     plt.ylabel('$x_2$')
     plt.title('SVM (%s, C=%.2g)' % (model.kernel, model.C))
+    plt.show()
 
 def plot_all_linear_separators(x, y, plot_best=False, n_points=51):
     ang_vec = np.linspace(0, 2 * np.pi, n_points)
