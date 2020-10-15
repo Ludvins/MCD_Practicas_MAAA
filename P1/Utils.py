@@ -452,7 +452,6 @@ def plot_svc(x, y, model, n_points=151, plot_slack=False):
     plt.xlabel('$x_1$')
     plt.ylabel('$x_2$')
     plt.title('SVM (%s, C=%.2g)' % (model.kernel, model.C))
-    plt.show()
 
 def plot_all_linear_separators(x, y, plot_best=False, n_points=51):
     ang_vec = np.linspace(0, 2 * np.pi, n_points)
